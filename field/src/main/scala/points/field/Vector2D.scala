@@ -11,6 +11,11 @@ final case class Vector2D[T] private (width: Int, vector: Vector[T]) extends Ite
 
   def apply(x: Int, y: Int): T = vector(toIndex(x, y))
 
+  def get(x: Int, y: Int): Option[T] =
+    if x >= 0 && x < width && y >= 0 && y < height
+    then vector.get(toIndex(x, y))
+    else none
+
   override def iterator: Iterator[T] =
     vector.iterator
 

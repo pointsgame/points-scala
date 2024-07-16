@@ -21,20 +21,23 @@ final class Field private (
   def apply(pos: Pos): Cell =
     cells(pos.x, pos.y)
 
-  def isInField(pos: Pos): Boolean =
+  def get(pos: Pos): Option[Cell] =
+    cells.get(pos.x, pos.y)
+
+  def isInside(pos: Pos): Boolean =
     pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < height
 
   def isPuttingAllowed(pos: Pos): Boolean =
-    isInField(pos) && apply(pos).isFree
+    get(pos).exists(_.isFree)
 
   def isOwner(pos: Pos, player: Player): Boolean =
-    isInField(pos) && apply(pos).isOwner(player)
+    get(pos).exists(_.isOwner(player))
 
   def isPlayersPoint(pos: Pos, player: Player): Boolean =
-    isInField(pos) && apply(pos).isPlayersPoint(player)
+    get(pos).exists(_.isPlayersPoint(player))
 
   def isCapturedPoint(pos: Pos, player: Player): Boolean =
-    isInField(pos) && apply(pos).isCapturedPoint(player)
+    get(pos).exists(_.isCapturedPoint(player))
 
   private def getFirstNextPos(centerPos: Pos, pos: Pos): Pos = pos.dx(centerPos) -> pos.dy(centerPos) match
     case (-1, -1) => centerPos.se
@@ -128,7 +131,7 @@ final class Field private (
     def neighborhood(pos: Pos): List[Pos] =
       List(pos.n, pos.s, pos.w, pos.e)
     def nextFront(passed: Set[Pos], front: Set[Pos]): Set[Pos] =
-      front.flatMap(neighborhood).filter(isInField).diff(passed).filter(f)
+      front.flatMap(neighborhood).filter(isInside).diff(passed).filter(f)
     @tailrec
     def _wave(passed: Set[Pos], front: Set[Pos]): Set[Pos] =
       if front.isEmpty then passed
