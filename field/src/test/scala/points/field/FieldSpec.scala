@@ -80,6 +80,24 @@ class FieldSpec extends munit.FunSuite:
     }
   }
 
+  test("deep onion surroundings") {
+    constructLastFieldWithRotations(
+      """
+      ...D...
+      ..DcD..
+      .DcBcD.
+      DcBaBcD
+      .DcBcD.
+      ..DcD..
+      ...D...
+      """,
+    ).get.toList.foreach { case (field, surroundings, rotate) =>
+      assert(field.scoreRed == 0)
+      assert(field.scoreBlack == 9)
+      assert(surroundings.size == 3)
+    }
+  }
+
   test("apply 'control' surrounding in same turn") {
     constructLastFieldWithRotations(
       """
