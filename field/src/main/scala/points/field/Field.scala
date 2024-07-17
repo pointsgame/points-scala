@@ -123,10 +123,11 @@ final class Field private (
       list.foldRight(List.empty[Int])((a, acc) => if acc.headOption.contains(a) then acc else a :: acc)
     NonEmptyList.fromList(removeNearSame(ring.filter(_.x <= pos.x).map(_.y))).fold(false) { coords =>
       val _coords =
-        if coords.last == pos.y then coords :+ (if coords.head == pos.y then coords.tail else coords.toList).head
+        if coords.last == pos.y then
+          coords ++ (if coords.head == pos.y then coords.tail else coords.toList).headOption.toList
         else if coords.head == pos.y then coords.last :: coords
         else coords
-      _coords.toList.zip(_coords.tail).zip(_coords.tail.tail).count { case ((a, b), c) =>
+      _coords.toList.zip(_coords.tail).zip(_coords.tail.drop(1)).count { case ((a, b), c) =>
         b == pos.y && ((a < b && c > b) || (a > b && c < b))
       } % 2 == 1
     }
