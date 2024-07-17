@@ -12,6 +12,9 @@ final class Field private (
   val moves: List[ColoredPos],
   val lastSurroundChain: Option[ColoredChain],
 ) derives CanEqual:
+  given nelCanEqual[A, B](using CanEqual[A, B]): CanEqual[NonEmptyList[A], NonEmptyList[B]] =
+    CanEqual.canEqualAny
+
   def width: Int = cells.width
   def height: Int = cells.height
 

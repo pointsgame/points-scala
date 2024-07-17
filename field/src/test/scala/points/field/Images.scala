@@ -11,7 +11,7 @@ object Images:
     * (Red), all 'B' points (Black), etc...
     */
   def constructMoveList(image: String): (Int, Int, List[ColoredPos]) =
-    val lines = image.stripMargin.lines.toList.asScala.toList.map(_.trim).filter(_.nonEmpty)
+    val lines = image.stripMargin.lines.nn.toList.nn.asScala.toList.map(_.trim.nn).filter(_.nonEmpty)
     require(lines.groupBy(_.length).size == 1, "lines must have equal length")
     val width = lines.head.length
     val height = lines.size
