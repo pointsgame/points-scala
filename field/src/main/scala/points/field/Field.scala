@@ -170,18 +170,19 @@ final class Field private (
 
   private def mergeCaptureChains(pos: Pos, chains: List[NonEmptyList[Pos]]): List[Pos] =
     @tailrec
-    def _mergeCaptureChains(l: List[NonEmptyList[Pos]]): List[Pos] =
+    def _mergeCaptureChains(l: NonEmptyList[NonEmptyList[Pos]]): List[Pos] =
       val first = l.head
       val last = l.last
       if first.head != last.toList(last.size - 2) then
-        l.map(_.toList)
-          .flatten
-          .foldRight(List.empty[Pos])((p, acc) =>
-            if p != pos && acc.contains(p) then acc.dropWhile(_ != p) else p :: acc,
-          )
-      else _mergeCaptureChains(l.tail :+ first)
-    if chains.size < 2 then chains.map(_.toList).flatten
-    else _mergeCaptureChains(chains)
+        l.flatten.toList.foldRight(List.empty[Pos])((p, acc) =>
+          if p != pos && acc.contains(p) then acc.dropWhile(_ != p) else p :: acc,
+        )
+      else _mergeCaptureChains(NonEmptyList.ofInitLast(l.tail, first))
+    NonEmptyList
+      .fromList(chains)
+      .filter(_.size >= 2)
+      .map(_mergeCaptureChains)
+      .getOrElse(chains.map(_.toList).flatten)
 
   def putPoint(pos: Pos, player: Player): Option[Field] =
     if !isPuttingAllowed(pos) then none
