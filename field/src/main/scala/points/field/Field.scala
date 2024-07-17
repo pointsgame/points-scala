@@ -117,15 +117,16 @@ final class Field private (
 
   private def isPosInsideRing(pos: Pos, ring: NonEmptyList[Pos]): Boolean =
     def removeNearSame(list: List[Int]): List[Int] =
-      list.foldRight(List(list.last))((a, acc) => if acc.head == a then acc else a :: acc)
-    val _ring = removeNearSame(ring.filter(_.x <= pos.x).map(_.y))
-    val __ring =
-      if _ring.last == pos.y then _ring :+ (if _ring.head == pos.y then _ring.tail else _ring).head
-      else if _ring.head == pos.y then _ring.last :: _ring
-      else _ring
-    __ring.zip(__ring.tail).zip(__ring.tail.tail).count { case ((a, b), c) =>
-      b == pos.y && ((a < b && c > b) || (a > b && c < b))
-    } % 2 == 1
+      list.foldRight(List.empty[Int])((a, acc) => if acc.headOption.contains(a) then acc else a :: acc)
+    NonEmptyList.fromList(removeNearSame(ring.filter(_.x <= pos.x).map(_.y))).fold(false) { coords =>
+      val _coords =
+        if coords.last == pos.y then coords :+ (if coords.head == pos.y then coords.tail else coords.toList).head
+        else if coords.head == pos.y then coords.last :: coords
+        else coords
+      _coords.toList.zip(_coords.tail).zip(_coords.tail.tail).count { case ((a, b), c) =>
+        b == pos.y && ((a < b && c > b) || (a > b && c < b))
+      } % 2 == 1
+    }
 
   def wave(startPos: Pos, f: Pos => Boolean): Set[Pos] =
     def neighborhood(pos: Pos): List[Pos] =
