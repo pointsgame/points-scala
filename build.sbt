@@ -1,5 +1,5 @@
 ThisBuild / scalaVersion := "3.4.2"
-ThisBuild / scalacOptions ++= Seq("-language:strictEquality", "-Yexplicit-nulls")
+ThisBuild / scalacOptions ++= Seq("-language:strictEquality", "-Yexplicit-nulls", "-Ysafe-init")
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
