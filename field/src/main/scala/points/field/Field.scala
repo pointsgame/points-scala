@@ -194,12 +194,13 @@ final class Field private (
     else
       val enemy = player.opponent
       val value = apply(pos)
+      val newMoves = ColoredPos(pos, player) :: moves
       if value.isEmptyBase(player) then
         new Field(
           cells.updated(pos.x, pos.y, Cell.Point(player)),
           scoreRed,
           scoreBlack,
-          ColoredPos(pos, player) :: moves,
+          newMoves,
           none,
         ).some
       else
@@ -229,7 +230,7 @@ final class Field private (
               updatedCells3,
               newScoreRed,
               newScoreBlack,
-              ColoredPos(pos, player) :: moves,
+              newMoves,
               ColoredChain(captureChain, player).some,
             ).some
           else
@@ -241,7 +242,7 @@ final class Field private (
               updatedCells,
               newScoreRed,
               newScoreBlack,
-              ColoredPos(pos, player) :: moves,
+              newMoves,
               ColoredChain(enemyEmptyBaseChain.toList, enemy).some,
             ).some
         else
@@ -257,7 +258,7 @@ final class Field private (
             updatedCells3,
             newScoreRed,
             newScoreBlack,
-            ColoredPos(pos, player) :: moves,
+            newMoves,
             if captureChain.isEmpty then none else ColoredChain(captureChain, player).some,
           ).some
 
