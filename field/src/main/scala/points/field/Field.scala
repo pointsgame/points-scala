@@ -47,7 +47,6 @@ final class Field private (
     case (0, -1) => centerPos.ne
     case (1, -1) => centerPos.ne
     case (-1, 0) => centerPos.se
-    case (0, 0) => centerPos.se
     case (1, 0) => centerPos.nw
     case (-1, 1) => centerPos.sw
     case (0, 1) => centerPos.sw
@@ -59,7 +58,6 @@ final class Field private (
     case (0, -1) => pos.e
     case (1, -1) => pos.n
     case (-1, 0) => pos.s
-    case (0, 0) => pos.s
     case (1, 0) => pos.n
     case (-1, 1) => pos.s
     case (0, 1) => pos.w
