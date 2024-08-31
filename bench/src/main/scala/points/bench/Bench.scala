@@ -33,7 +33,7 @@ object Bench extends CommandIOApp("bench", "Points field benchmark"):
   yield Pos(x, y)
 
   def randomGame[F[_]: Functor: Random](width: Int, height: Int): F[Field] =
-    for moves <- Random[F].shuffleList(allMoves(width, height).toList)
+    for moves <- Random[F].shuffleVector(allMoves(width, height).toVector)
     yield moves.foldLeft(Field(width, height))((field, pos) => field.putPoint(pos).getOrElse(field))
 
   def randomGames[F[_]: Functor: Random](games: Int, width: Int, height: Int): Stream[F, Field] =
@@ -42,7 +42,7 @@ object Bench extends CommandIOApp("bench", "Points field benchmark"):
   override def main: Opts[IO[ExitCode]] =
     Args.args.map(args =>
       for
-        given Random[IO] <- Random.scalaUtilRandom[IO]
+        given Random[IO] <- Random.scalaUtilRandomSeedInt[IO](args.seed)
         result <- randomGames[IO](args.gamesNumber, args.width, args.height)
           .map(Result.gameResult)
           .foldMonoid
