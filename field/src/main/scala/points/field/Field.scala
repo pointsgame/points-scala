@@ -1,5 +1,6 @@
 package points.field
 
+import cats.Comparison
 import cats.data.NonEmptyList
 import cats.implicits.*
 
@@ -13,6 +14,9 @@ final class Field private (
   val lastSurroundChain: Option[ColoredChain],
 ) derives CanEqual:
   given nelCanEqual[A, B](using CanEqual[A, B]): CanEqual[NonEmptyList[A], NonEmptyList[B]] =
+    CanEqual.canEqualAny
+
+  given comparisonCanEqual: CanEqual[Comparison, Comparison] =
     CanEqual.canEqualAny
 
   def width: Int = cells.width
@@ -260,8 +264,17 @@ final class Field private (
             if captureChain.isEmpty then none else ColoredChain(captureChain, player).some,
           ).some
 
+  def nextPlayer: Player =
+    lastPlayer.map(_.opponent).getOrElse(Player.Red)
+
   def putPoint(pos: Pos): Option[Field] =
-    putPoint(pos, lastPlayer.map(_.opponent).getOrElse(Player.Red))
+    putPoint(pos, nextPlayer)
+
+  def winner: Option[Player] =
+    scoreRed.comparison(scoreBlack) match
+      case Comparison.GreaterThan => Player.Red.some
+      case Comparison.LessThan => Player.Black.some
+      case Comparison.EqualTo => none
 
   override def equals(o: Any): Boolean = o match
     case that: Field =>
