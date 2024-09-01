@@ -10,6 +10,8 @@ import com.monovore.decline.effect.*
 import fs2.Stream
 import points.field.{Field, Player, Pos}
 
+import scala.concurrent.duration.*
+
 final case class Args(width: Int, height: Int, gamesNumber: Int, seed: Int) derives CanEqual
 object Args:
   val width = Opts.option[Int]("width", "Field width.", "w", "WIDTH")
@@ -27,6 +29,9 @@ object Result:
       case None => Result(0, 0)
 
 object Bench extends CommandIOApp("bench", "Points field benchmark"):
+  override def runtimeConfig =
+    super.runtimeConfig.copy(cpuStarvationCheckInitialDelay = Duration.Inf)
+
   def allMoves(width: Int, height: Int): Seq[Pos] = for
     x <- 0 until width
     y <- 0 until height
