@@ -90,7 +90,7 @@ final class Field private (
       else getChain(h, NonEmptyList.fromList(list.toList.dropWhile(_ != nextPos)).getOrElse(nextPos :: list))
 
     val chain = getChain(startPos, NonEmptyList.of(nextPos, startPos))
-    if chain.length > 2 && square(chain) > 0 then chain.some
+    if square(chain) > 0 then chain.some
     else none
 
   private def getInputPoints(pos: Pos, player: Player): List[(Pos, Pos)] =
