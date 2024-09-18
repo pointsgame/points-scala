@@ -27,3 +27,16 @@ enum Cell derives CanEqual:
   def isCapturedPoint(player: Player): Boolean = this match
     case Base(p, enemy) => p == player.opponent && enemy
     case _ => false
+
+  def capture(player: Player): Cell = this match
+    case Cell.Empty =>
+      Cell.Base(player, false)
+    case Cell.Point(p) =>
+      if p == player then Cell.Point(p)
+      else Cell.Base(player, true)
+    case Cell.Base(p, enemy) =>
+      if p == player then Cell.Base(p, enemy)
+      else if enemy then Cell.Point(player)
+      else Cell.Base(player, false)
+    case Cell.EmptyBase(_) =>
+      Cell.Base(player, false)

@@ -162,19 +162,6 @@ final class Field private (
     val emptyBaseChain = getEmptyBaseChain(startPos.w)
     (emptyBaseChain, getInsideRing(startPos, emptyBaseChain).filter(apply(_).isFree))
 
-  private def capture(posValue: Cell, player: Player): Cell = posValue match
-    case Cell.Empty =>
-      Cell.Base(player, false)
-    case Cell.Point(p) =>
-      if p == player then Cell.Point(p)
-      else Cell.Base(player, true)
-    case Cell.Base(p, enemy) =>
-      if p == player then Cell.Base(p, enemy)
-      else if enemy then Cell.Point(player)
-      else Cell.Base(player, false)
-    case Cell.EmptyBase(_) =>
-      Cell.Base(player, false)
-
   private def mergeCaptureChains(pos: Pos, chains: List[NonEmptyList[Pos]]): List[Pos] =
     @tailrec
     def _mergeCaptureChains(l: NonEmptyList[NonEmptyList[Pos]]): List[Pos] =
@@ -227,7 +214,7 @@ final class Field private (
             val updatedCells1 = enemyEmptyBase.foldLeft(cells)((acc, p) => acc.updated(p.x, p.y, Cell.Empty))
             val updatedCells2 = updatedCells1.updated(pos.x, pos.y, Cell.Point(player))
             val updatedCells3 =
-              realCaptured.foldLeft(updatedCells2)((acc, p) => acc.updated(p.x, p.y, capture(apply(p), player)))
+              realCaptured.foldLeft(updatedCells2)((acc, p) => acc.updated(p.x, p.y, apply(p).capture(player)))
             new Field(
               updatedCells3,
               newScoreRed,
@@ -255,7 +242,7 @@ final class Field private (
           val updatedCells2 =
             newEmptyBase.foldLeft(updatedCells1)((acc, p) => acc.updated(p.x, p.y, Cell.EmptyBase(player)))
           val updatedCells3 =
-            realCaptured.foldLeft(updatedCells2)((acc, p) => acc.updated(p.x, p.y, capture(apply(p), player)))
+            realCaptured.foldLeft(updatedCells2)((acc, p) => acc.updated(p.x, p.y, apply(p).capture(player)))
           new Field(
             updatedCells3,
             newScoreRed,
