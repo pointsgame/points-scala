@@ -78,8 +78,7 @@ final class Field private (
   private def buildChain(startPos: Pos, nextPos: Pos, player: Player): Option[NonEmptyList[Pos]] =
     @tailrec
     def getNextPlayerPos(centerPos: Pos, pos: Pos): Pos =
-      if pos == startPos then pos
-      else if isOwner(pos, player) then pos
+      if pos == startPos || isOwner(pos, player) then pos
       else getNextPlayerPos(centerPos, getNextPos(centerPos, pos))
 
     @tailrec
