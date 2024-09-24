@@ -1,31 +1,31 @@
 package points.field
 
 final case class Pos(x: Int, y: Int) derives CanEqual:
-  def n: Pos =
+  inline def n: Pos =
     Pos(x, y + 1)
-  def s: Pos =
+  inline def s: Pos =
     Pos(x, y - 1)
-  def w: Pos =
+  inline def w: Pos =
     Pos(x - 1, y)
-  def e: Pos =
+  inline def e: Pos =
     Pos(x + 1, y)
 
-  def nw: Pos =
+  inline def nw: Pos =
     Pos(x - 1, y + 1)
-  def ne: Pos =
+  inline def ne: Pos =
     Pos(x + 1, y + 1)
-  def sw: Pos =
+  inline def sw: Pos =
     Pos(x - 1, y - 1)
-  def se: Pos =
+  inline def se: Pos =
     Pos(x + 1, y - 1)
 
-  def dx(pos: Pos): Int =
+  inline def dx(pos: Pos): Int =
     x - pos.x
-  def dy(pos: Pos): Int =
+  inline def dy(pos: Pos): Int =
     y - pos.y
 
-  def tuple: (Int, Int) =
+  inline def tuple: (Int, Int) =
     (x, y)
 
-  def skewProduct(other: Pos): Int =
+  inline def skewProduct(other: Pos): Int =
     x * other.y - other.x * y

@@ -19,31 +19,31 @@ final class Field private (
   given comparisonCanEqual: CanEqual[Comparison, Comparison] =
     CanEqual.canEqualAny
 
-  def width: Int = cells.width
-  def height: Int = cells.height
+  inline def width: Int = cells.width
+  inline def height: Int = cells.height
 
-  def lastPlayer: Option[Player] =
+  inline def lastPlayer: Option[Player] =
     moves.headOption.map(_.player)
 
-  def apply(pos: Pos): Cell =
+  inline def apply(pos: Pos): Cell =
     cells(pos.x, pos.y)
 
-  def get(pos: Pos): Option[Cell] =
+  inline def get(pos: Pos): Option[Cell] =
     cells.get(pos.x, pos.y)
 
-  def isInside(pos: Pos): Boolean =
+  inline def isInside(pos: Pos): Boolean =
     pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < height
 
-  def isPuttingAllowed(pos: Pos): Boolean =
+  inline def isPuttingAllowed(pos: Pos): Boolean =
     get(pos).exists(_.isFree)
 
-  def isOwner(pos: Pos, player: Player): Boolean =
+  inline def isOwner(pos: Pos, player: Player): Boolean =
     get(pos).exists(_.isOwner(player))
 
-  def isPlayersPoint(pos: Pos, player: Player): Boolean =
+  inline def isPlayersPoint(pos: Pos, player: Player): Boolean =
     get(pos).exists(_.isPlayersPoint(player))
 
-  def isCapturedPoint(pos: Pos, player: Player): Boolean =
+  inline def isCapturedPoint(pos: Pos, player: Player): Boolean =
     get(pos).exists(_.isCapturedPoint(player))
 
   private def getFirstNextPos(centerPos: Pos, pos: Pos): Pos = pos.dx(centerPos) -> pos.dy(centerPos) match
@@ -250,13 +250,13 @@ final class Field private (
             if captureChain.isEmpty then none else ColoredChain(captureChain, player).some,
           ).some
 
-  def nextPlayer: Player =
+  inline def nextPlayer: Player =
     lastPlayer.map(_.opponent).getOrElse(Player.Red)
 
-  def putPoint(pos: Pos): Option[Field] =
+  inline def putPoint(pos: Pos): Option[Field] =
     putPoint(pos, nextPlayer)
 
-  def winner: Option[Player] =
+  inline def winner: Option[Player] =
     scoreRed.comparison(scoreBlack) match
       case Comparison.GreaterThan => Player.Red.some
       case Comparison.LessThan => Player.Black.some
