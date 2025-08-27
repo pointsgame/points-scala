@@ -35,7 +35,7 @@ final case class Vector2D[T] private (width: Int, vector: Vector[T]) extends Ite
 object Vector2D:
   def apply[T](rows: Vector[Vector[T]]): Option[Vector2D[T]] =
     rows.headOption.fold(empty.some) { head =>
-      Option.when(rows.forall(_.size == rows.head.size))(Vector2D(rows.head.size, rows.flatten))
+      Option.when(rows.forall(_.size == head.size))(Vector2D(head.size, rows.flatten))
     }
 
   def empty[T]: Vector2D[T] =
