@@ -10,7 +10,7 @@ object Images:
     * Black. Order by which appropriate points are placed: all 'a' points (Red), all 'A' points (Black), all 'b' points
     * (Red), all 'B' points (Black), etc...
     */
-  def constructMoveList(image: String): (Int, Int, List[ColoredPos]) =
+  def constructMoveList(image: String): (Int, Int, List[(Pos, Player)]) =
     val lines = image.stripMargin.lines.nn.toList.nn.asScala.toList.map(_.trim.nn).filter(_.nonEmpty)
     require(lines.groupBy(_.length).size == 1, "lines must have equal length")
     val width = lines.head.length
@@ -24,7 +24,7 @@ object Images:
         char.toLower -> char.isLower
       }
       .map { case (char, pos) =>
-        ColoredPos(pos, Player(char.isLower))
+        pos -> Player(char.isLower)
       }
     (width, height, moves)
 
@@ -39,39 +39,34 @@ object Images:
     { case Pos(x, y) => Pos(size - 1 - y, size - 1 - x) },
   )
 
-  def constructFieldsFromMoves(width: Int, height: Int, moves: List[ColoredPos]): Option[NonEmptyList[Field]] =
+  def constructFieldsFromMoves(width: Int, height: Int, moves: List[(Pos, Player)]): Option[NonEmptyList[Field]] =
     moves.foldLeftM {
       NonEmptyList.one(Field(width, height))
     } { (fields, cp) =>
-      fields.head.putPoint(cp.pos, cp.player).map(_ :: fields)
+      fields.head.putPoint(cp._1, cp._2).map(_ :: fields)
     }
 
   def constructFieldsFromMovesWithRotations(
     width: Int,
     height: Int,
-    moves: List[ColoredPos],
+    moves: List[(Pos, Player)],
   ): Option[NonEmptyList[(NonEmptyList[Field], Pos => Pos)]] =
     val fieldSize = math.max(width, height)
-    rotations(fieldSize).traverse { rotate =>
-      val rotatedMoves = moves.map(cp => cp.copy(pos = rotate(cp.pos)))
-      constructFieldsFromMoves(fieldSize, fieldSize, rotatedMoves).map(_ -> rotate)
-    }
-
-  def surroundings(fields: NonEmptyList[Field]): List[ColoredChain] =
-    fields.toList.flatMap(_.lastSurroundChain)
+    rotations(fieldSize).traverse:
+      rotate =>
+        val rotatedMoves = moves.map { case (pos, player) => rotate(pos) -> player }
+        constructFieldsFromMoves(fieldSize, fieldSize, rotatedMoves).map(_ -> rotate)
 
   def constructFields(image: String): Option[NonEmptyList[Field]] =
     constructFieldsFromMoves.tupled(constructMoveList(image))
 
-  def constructLastField(image: String): Option[(Field, List[ColoredChain])] =
-    constructFields(image).map { fields =>
-      (fields.head, surroundings(fields))
-    }
+  def constructLastField(image: String): Option[Field] =
+    constructFields(image).map(_.head)
 
   def constructFieldsWithRotations(image: String): Option[NonEmptyList[(NonEmptyList[Field], Pos => Pos)]] =
     constructFieldsFromMovesWithRotations.tupled(constructMoveList(image))
 
-  def constructLastFieldWithRotations(image: String): Option[NonEmptyList[(Field, List[ColoredChain], Pos => Pos)]] =
+  def constructLastFieldWithRotations(image: String): Option[NonEmptyList[(Field, Pos => Pos)]] =
     constructFieldsWithRotations(image).map(_.map { case (fields, rotate) =>
-      (fields.head, surroundings(fields), rotate)
+      (fields.head, rotate)
     })

@@ -3,53 +3,50 @@ package points.field
 import points.field.Images.*
 
 class FieldSpec extends munit.FunSuite:
-  test("simple surround") {
+  test("simple surround"):
     constructLastFieldWithRotations(
       """
       .a.
       cBa
       .a.
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 1)
-      assertEquals(field.scoreBlack, 0)
-      assertEquals(surroundings.size, 1)
-    }
-  }
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 1)
+        assertEquals(field.scoreBlack, 0)
+        assertEquals(field.lastSurroundChains.size, 1)
 
-  test("surround empty territory") {
+  test("surround empty territory"):
     constructLastFieldWithRotations(
       """
       .a.
       a.a
       .a.
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 0)
-      assertEquals(field.scoreBlack, 0)
-      assert(surroundings.isEmpty)
-      assert(field.isPuttingAllowed(rotate(Pos(1, 1))))
-      assert(!field.isPuttingAllowed(rotate(Pos(0, 1))))
-      assert(!field.isPuttingAllowed(rotate(Pos(1, 0))))
-      assert(!field.isPuttingAllowed(rotate(Pos(1, 2))))
-    }
-  }
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 0)
+        assertEquals(field.scoreBlack, 0)
+        assert(field.lastSurroundChains.isEmpty)
+        assert(field.isPuttingAllowed(rotate(Pos(1, 1))))
+        assert(!field.isPuttingAllowed(rotate(Pos(0, 1))))
+        assert(!field.isPuttingAllowed(rotate(Pos(1, 0))))
+        assert(!field.isPuttingAllowed(rotate(Pos(1, 2))))
 
-  test("move priority") {
+  test("move priority"):
     constructLastFieldWithRotations(
       """
       .aB.
       aCaB
       .aB.
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 0)
-      assertEquals(field.scoreBlack, 1)
-      assertEquals(surroundings.size, 1)
-    }
-  }
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 0)
+        assertEquals(field.scoreBlack, 1)
+        assertEquals(field.lastSurroundChains.size, 1)
 
-  test("move priority, big") {
+  test("move priority, big"):
     constructLastFieldWithRotations(
       """
       .B..
@@ -57,14 +54,13 @@ class FieldSpec extends munit.FunSuite:
       aCaB
       .aB.
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 0)
-      assertEquals(field.scoreBlack, 2)
-      assertEquals(surroundings.size, 1)
-    }
-  }
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 0)
+        assertEquals(field.scoreBlack, 2)
+        assertEquals(field.lastSurroundChains.size, 2)
 
-  test("onion surroundings") {
+  test("onion surroundings"):
     constructLastFieldWithRotations(
       """
       ...c...
@@ -73,14 +69,13 @@ class FieldSpec extends munit.FunSuite:
       ..cBc..
       ...c...
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 4)
-      assertEquals(field.scoreBlack, 0)
-      assertEquals(surroundings.size, 2)
-    }
-  }
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 4)
+        assertEquals(field.scoreBlack, 0)
+        assertEquals(field.lastSurroundChains.size, 1)
 
-  test("deep onion surroundings") {
+  test("deep onion surroundings"):
     constructLastFieldWithRotations(
       """
       ...D...
@@ -91,63 +86,54 @@ class FieldSpec extends munit.FunSuite:
       ..DcD..
       ...D...
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 0)
-      assertEquals(field.scoreBlack, 9)
-      assertEquals(surroundings.size, 3)
-    }
-  }
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 0)
+        assertEquals(field.scoreBlack, 9)
+        assertEquals(field.lastSurroundChains.size, 1)
 
-  test("apply 'control' surrounding in same turn") {
+  test("apply 'control' surrounding in same turn"):
     constructLastFieldWithRotations(
       """
       .a.
       aBa
       .a.
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 1)
-      assertEquals(field.scoreBlack, 0)
-      assertEquals(surroundings.size, 1)
-    }
-  }
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 1)
+        assertEquals(field.scoreBlack, 0)
+        assertEquals(field.lastSurroundChains.size, 1)
 
-  test("double surround") {
+  test("double surround"):
     constructLastFieldWithRotations(
       """
       .b.b..
       bAzAb.
       .b.b..
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 2)
-      assertEquals(field.scoreBlack, 0)
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 2)
+        assertEquals(field.scoreBlack, 0)
+        assertEquals(field.lastSurroundChains.map(_.size), List(4, 4))
 
-      // These assertions rely on `Field` conventions.
-      // We assume there can be exactly one surrounding per turn
-      // (but the surrounding may seem like two separate surroundings on GUI).
-      assertEquals(field.lastSurroundChain.map(_.chain.size), Some(8))
-      assertEquals(surroundings.size, 1)
-    }
-  }
-
-  test("double surround with empty part") {
+  test("double surround with empty part"):
     constructLastFieldWithRotations(
       """
       .b.b..
       b.zAb.
       .b.b..
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 1)
-      assertEquals(field.scoreBlack, 0)
-      assertEquals(surroundings.size, 1)
-      assert(field.isPuttingAllowed(rotate(Pos(1, 1))))
-      assert(!field.isPuttingAllowed(rotate(Pos(3, 1))))
-    }
-  }
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 1)
+        assertEquals(field.scoreBlack, 0)
+        assertEquals(field.lastSurroundChains.size, 1)
+        assert(field.isPuttingAllowed(rotate(Pos(1, 1))))
+        assert(!field.isPuttingAllowed(rotate(Pos(3, 1))))
 
-  test("should not leave empty inside") {
+  test("should not leave empty inside"):
     constructLastFieldWithRotations(
       """
       .aaaa..
@@ -158,37 +144,35 @@ class FieldSpec extends munit.FunSuite:
       a....a.
       .aaaa..
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 1)
-      assertEquals(field.scoreBlack, 0)
-      assertEquals(surroundings.size, 1)
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 1)
+        assertEquals(field.scoreBlack, 0)
+        assertEquals(field.lastSurroundChains.size, 1)
 
-      assert(!field.isPuttingAllowed(rotate(Pos(2, 3))))
+        assert(!field.isPuttingAllowed(rotate(Pos(2, 3))))
 
-      assert(!field.isPuttingAllowed(rotate(Pos(2, 4))))
-      assert(!field.isPuttingAllowed(rotate(Pos(2, 2))))
-      assert(!field.isPuttingAllowed(rotate(Pos(1, 3))))
-      assert(!field.isPuttingAllowed(rotate(Pos(3, 3))))
+        assert(!field.isPuttingAllowed(rotate(Pos(2, 4))))
+        assert(!field.isPuttingAllowed(rotate(Pos(2, 2))))
+        assert(!field.isPuttingAllowed(rotate(Pos(1, 3))))
+        assert(!field.isPuttingAllowed(rotate(Pos(3, 3))))
 
-      assert(!field.isPuttingAllowed(rotate(Pos(1, 1))))
-    }
-  }
+        assert(!field.isPuttingAllowed(rotate(Pos(1, 1))))
 
-  test("surround in opposite turn") {
+  test("surround in opposite turn"):
     constructLastFieldWithRotations(
       """
       .a.
       aBa
       .a.
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 1)
-      assertEquals(field.scoreBlack, 0)
-      assertEquals(surroundings.size, 1)
-    }
-  }
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 1)
+        assertEquals(field.scoreBlack, 0)
+        assertEquals(field.lastSurroundChains.size, 1)
 
-  test("partly surround in opposite turn") {
+  test("partly surround in opposite turn"):
     constructLastFieldWithRotations(
       """
       .a..
@@ -196,19 +180,18 @@ class FieldSpec extends munit.FunSuite:
       .a.a
       ..a.
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 1)
-      assertEquals(field.scoreBlack, 0)
-      assertEquals(surroundings.size, 1)
-      assert(field.isPuttingAllowed(rotate(Pos(2, 2))))
-      assert(!field.isPuttingAllowed(rotate(Pos(2, 3))))
-      assert(!field.isPuttingAllowed(rotate(Pos(2, 1))))
-      assert(!field.isPuttingAllowed(rotate(Pos(3, 2))))
-      assert(!field.isPuttingAllowed(rotate(Pos(1, 2))))
-    }
-  }
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 1)
+        assertEquals(field.scoreBlack, 0)
+        assertEquals(field.lastSurroundChains.size, 1)
+        assert(field.isPuttingAllowed(rotate(Pos(2, 2))))
+        assert(!field.isPuttingAllowed(rotate(Pos(2, 3))))
+        assert(!field.isPuttingAllowed(rotate(Pos(2, 1))))
+        assert(!field.isPuttingAllowed(rotate(Pos(3, 2))))
+        assert(!field.isPuttingAllowed(rotate(Pos(1, 2))))
 
-  test("a hole inside a surrounding") {
+  test("a hole inside a surrounding"):
     constructLastFieldWithRotations(
       """
       ....c....
@@ -221,16 +204,15 @@ class FieldSpec extends munit.FunSuite:
       ...cBc...
       ....d....
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 1)
-      assertEquals(field.scoreBlack, 0)
-      assertEquals(surroundings.size, 1)
-      assert(!field.isPuttingAllowed(rotate(Pos(4, 4))))
-      assert(!field.isPuttingAllowed(rotate(Pos(4, 1))))
-    }
-  }
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 1)
+        assertEquals(field.scoreBlack, 0)
+        assertEquals(field.lastSurroundChains.size, 1)
+        assert(!field.isPuttingAllowed(rotate(Pos(4, 4))))
+        assert(!field.isPuttingAllowed(rotate(Pos(4, 1))))
 
-  test("a hole inside a surrounding, after opposite turn surrounding") {
+  test("a hole inside a surrounding, after opposite turn surrounding"):
     constructLastFieldWithRotations(
       """
       ....b....
@@ -243,16 +225,15 @@ class FieldSpec extends munit.FunSuite:
       ...bCb...
       ....b....
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 1)
-      assertEquals(field.scoreBlack, 0)
-      assertEquals(surroundings.size, 1)
-      assert(!field.isPuttingAllowed(rotate(Pos(4, 4))))
-      assert(!field.isPuttingAllowed(rotate(Pos(4, 1))))
-    }
-  }
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 1)
+        assertEquals(field.scoreBlack, 0)
+        assertEquals(field.lastSurroundChains.size, 1)
+        assert(!field.isPuttingAllowed(rotate(Pos(4, 4))))
+        assert(!field.isPuttingAllowed(rotate(Pos(4, 1))))
 
-  test("surrounding does not expand") {
+  test("surrounding does not expand"):
     constructLastFieldWithRotations(
       """
       ....a....
@@ -265,23 +246,21 @@ class FieldSpec extends munit.FunSuite:
       ...a.a...
       ....a....
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 1)
-      assertEquals(field.scoreBlack, 0)
-      assertEquals(surroundings.size, 1)
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 1)
+        assertEquals(field.scoreBlack, 0)
 
-      assertEquals(field.lastSurroundChain.map(_.chain.size), Some(4))
+        assertEquals(field.lastSurroundChains.map(_.size), List(4))
 
-      assert(field.isPuttingAllowed(rotate(Pos(6, 3))))
-      assert(field.isPuttingAllowed(rotate(Pos(4, 3))))
-      assert(field.isPuttingAllowed(rotate(Pos(4, 5))))
-      assert(field.isPuttingAllowed(rotate(Pos(6, 5))))
+        assert(field.isPuttingAllowed(rotate(Pos(6, 3))))
+        assert(field.isPuttingAllowed(rotate(Pos(4, 3))))
+        assert(field.isPuttingAllowed(rotate(Pos(4, 5))))
+        assert(field.isPuttingAllowed(rotate(Pos(6, 5))))
 
-      assert(!field.isPuttingAllowed(rotate(Pos(5, 4))))
-    }
-  }
+        assert(!field.isPuttingAllowed(rotate(Pos(5, 4))))
 
-  test("2 surroundings with common border") {
+  test("2 surroundings with common border"):
     constructLastFieldWithRotations(
       """
       .a..
@@ -289,30 +268,28 @@ class FieldSpec extends munit.FunSuite:
       .cBa
       ..a.
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 2)
-      assertEquals(field.scoreBlack, 0)
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 2)
+        assertEquals(field.scoreBlack, 0)
 
-      assertEquals(field.lastSurroundChain.map(_.chain.size), Some(6))
-    }
-  }
+        assertEquals(field.lastSurroundChains.map(_.size), List(4, 4))
 
-  test("2 surroundings with common dot") {
+  test("2 surroundings with common dot"):
     constructLastFieldWithRotations(
       """
       .a.a.
       aBcBa
       .a.a.
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 2)
-      assertEquals(field.scoreBlack, 0)
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 2)
+        assertEquals(field.scoreBlack, 0)
 
-      assertEquals(field.lastSurroundChain.map(_.chain.size), Some(8))
-    }
-  }
+        assertEquals(field.lastSurroundChains.map(_.size), List(4, 4))
 
-  test("3 surroundings with common borders") {
+  test("3 surroundings with common borders"):
     constructLastFieldWithRotations(
       """
       ..a..
@@ -321,15 +298,14 @@ class FieldSpec extends munit.FunSuite:
       .aBa.
       ..a..
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 3)
-      assertEquals(field.scoreBlack, 0)
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 3)
+        assertEquals(field.scoreBlack, 0)
 
-      assertEquals(field.lastSurroundChain.map(_.chain.size), Some(8))
-    }
-  }
+        assertEquals(field.lastSurroundChains.map(_.size), List(4, 4, 4))
 
-  test("2 surroundings with common dot, one borderline empty place") {
+  test("2 surroundings with common dot, one borderline empty place"):
     constructLastFieldWithRotations(
       """
       ..a..
@@ -338,10 +314,47 @@ class FieldSpec extends munit.FunSuite:
       .aBa.
       ..a..
       """,
-    ).get.toList.foreach { case (field, surroundings, rotate) =>
-      assertEquals(field.scoreRed, 2)
-      assertEquals(field.scoreBlack, 0)
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 2)
+        assertEquals(field.scoreBlack, 0)
 
-      assertEquals(field.lastSurroundChain.map(_.chain.size), Some(8))
-    }
-  }
+        assertEquals(field.lastSurroundChains.map(_.size), List(4, 4))
+
+  test("ambiguous surrounding 1"):
+    constructLastFieldWithRotations(
+      """
+      .aa.aa.
+      a..b..a
+      a.aAa.a
+      a..a..a
+      .a...a.
+      ..aaa..
+      """,
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 1)
+        assertEquals(field.scoreBlack, 0)
+
+        assertEquals(field.lastSurroundChains.map(_.size), List(4))
+
+        assert(field.isPuttingAllowed(rotate(Pos(3, 4))))
+
+  test("ambiguous surrounding 2"):
+    constructLastFieldWithRotations(
+      """
+      ..aaa..
+      .a...a.
+      a..a..a
+      a.aAa.a
+      a..b..a
+      .aa.aa.
+      """,
+    ).get.toList.foreach:
+      case (field, rotate) =>
+        assertEquals(field.scoreRed, 1)
+        assertEquals(field.scoreBlack, 0)
+
+        assertEquals(field.lastSurroundChains.map(_.size), List(4))
+
+        assert(field.isPuttingAllowed(rotate(Pos(3, 1))))

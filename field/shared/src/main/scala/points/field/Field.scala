@@ -6,12 +6,13 @@ import cats.implicits.*
 
 import scala.annotation.tailrec
 
-final class Field private (
-  val cells: Vector2D[Cell],
-  val scoreRed: Int,
-  val scoreBlack: Int,
-  val moves: List[ColoredPos],
-  val lastSurroundChain: Option[ColoredChain],
+final case class Field private (
+  cells: Vector2D[Cell],
+  scoreRed: Int,
+  scoreBlack: Int,
+  moves: List[(Pos, Player)],
+  lastSurroundPlayer: Player,
+  lastSurroundChains: List[NonEmptyList[Pos]],
 ) derives CanEqual:
   given nelCanEqual[A, B](using CanEqual[A, B]): CanEqual[NonEmptyList[A], NonEmptyList[B]] =
     CanEqual.canEqualAny
@@ -23,7 +24,7 @@ final class Field private (
   inline def height: Int = cells.height
 
   inline def lastPlayer: Option[Player] =
-    moves.headOption.map(_.player)
+    moves.headOption.map(_._2)
 
   inline def apply(pos: Pos): Cell =
     cells(pos.x, pos.y)
@@ -122,16 +123,17 @@ final class Field private (
   private def isPosInsideRing(pos: Pos, ring: NonEmptyList[Pos]): Boolean =
     def removeNearSame(list: List[Int]): List[Int] =
       list.foldRight(List.empty[Int])((a, acc) => if acc.headOption.contains(a) then acc else a :: acc)
-    NonEmptyList.fromList(removeNearSame(ring.filter(_.x <= pos.x).map(_.y))).fold(false) { coords =>
-      val _coords =
-        if coords.last == pos.y then
-          coords ++ (if coords.head == pos.y then coords.tail else coords.toList).headOption.toList
-        else if coords.head == pos.y then coords.last :: coords
-        else coords
-      _coords.toList.zip(_coords.tail).zip(_coords.tail.drop(1)).count { case ((a, b), c) =>
-        b == pos.y && ((a < b && c > b) || (a > b && c < b))
-      } % 2 == 1
-    }
+    NonEmptyList
+      .fromList(removeNearSame(ring.filter(_.x <= pos.x).map(_.y)))
+      .fold(false): coords =>
+        val _coords =
+          if coords.last == pos.y then
+            coords ++ (if coords.head == pos.y then coords.tail else coords.toList).headOption.toList
+          else if coords.head == pos.y then coords.last :: coords
+          else coords
+        _coords.toList.zip(_coords.tail).zip(_coords.tail.drop(1)).count { case ((a, b), c) =>
+          b == pos.y && ((a < b && c > b) || (a > b && c < b))
+        } % 2 == 1
 
   def wave(startPos: Pos, f: Pos => Boolean): Set[Pos] =
     def neighborhood(pos: Pos): List[Pos] =
@@ -161,94 +163,79 @@ final class Field private (
     val emptyBaseChain = getEmptyBaseChain(startPos.w)
     (emptyBaseChain, getInsideRing(startPos, emptyBaseChain).filter(apply(_).isFree))
 
-  private def mergeCaptureChains(pos: Pos, chains: List[NonEmptyList[Pos]]): List[Pos] =
-    @tailrec
-    def _mergeCaptureChains(l: NonEmptyList[NonEmptyList[Pos]]): List[Pos] =
-      val first = l.head
-      val last = l.last
-      if first.head != last.toList(last.size - 2) then
-        l.flatten.toList.foldRight(List.empty[Pos])((p, acc) =>
-          if p != pos && acc.contains(p) then acc.dropWhile(_ != p) else p :: acc,
-        )
-      else _mergeCaptureChains(NonEmptyList.ofInitLast(l.tail, first))
-    NonEmptyList
-      .fromList(chains)
-      .filter(_.size >= 2)
-      .map(_mergeCaptureChains)
-      .getOrElse(chains.map(_.toList).flatten)
-
   def putPoint(pos: Pos, player: Player): Option[Field] =
     if !isPuttingAllowed(pos) then none
     else
       val enemy = player.opponent
       val value = apply(pos)
-      val newMoves = ColoredPos(pos, player) :: moves
+      val newMoves = (pos, player) :: moves
       if value.isEmptyBase(player) then
-        new Field(
-          cells.updated(pos.x, pos.y, Cell.Point(player)),
-          scoreRed,
-          scoreBlack,
-          newMoves,
-          none,
+        copy(
+          cells = cells.updated(pos.x, pos.y, Cell.Point(player)),
+          moves = newMoves,
+          lastSurroundPlayer = player,
+          lastSurroundChains = List.empty,
         ).some
       else
-        val captures = getInputPoints(pos, player).flatMap { case (chainPos, capturedPos) =>
-          for
-            chain <- buildChain(pos, chainPos, player)
-            captured = getInsideRing(capturedPos, chain)
-            capturedCount = captured.count(isPlayersPoint(_, enemy))
-            freedCount = captured.count(isCapturedPoint(_, player))
-          yield (chain, captured, capturedCount, freedCount)
-        }
-        val (realCaptures, emptyCaptures) = captures.partition(_._3 != 0)
-        val capturedCount = realCaptures.map(_._3).sum
-        val freedCount = realCaptures.map(_._4).sum
-        val realCaptured = realCaptures.flatMap(_._2)
-        val captureChain = mergeCaptureChains(pos, realCaptures.map(_._1))
+        val fieldWithCaptures = getInputPoints(pos, player)
+          .flatMap { case (chainPos, capturedPos) =>
+            buildChain(pos, chainPos, player).map(_ -> capturedPos)
+          }
+          .sortBy(_._1.size)
+          .foldLeft {
+            this.copy(
+              lastSurroundPlayer = player,
+              lastSurroundChains = List.empty,
+            )
+          } { case (field, (chain, capturedPos)) =>
+            val captured = field.getInsideRing(capturedPos, chain)
+            val capturedCount = captured.count(field.isPlayersPoint(_, enemy))
+            val freedCount = captured.count(field.isCapturedPoint(_, player))
+            if capturedCount > 0 then
+              val newScoreRed =
+                if player == Player.Red then field.scoreRed + capturedCount else field.scoreRed - freedCount
+              val newScoreBlack =
+                if player == Player.Black then field.scoreBlack + capturedCount else field.scoreBlack - freedCount
+              field.copy(
+                cells = captured.foldLeft(field.cells)((acc, p) => acc.updated(p.x, p.y, field(p).capture(player))),
+                scoreRed = newScoreRed,
+                scoreBlack = newScoreBlack,
+                lastSurroundChains = chain :: field.lastSurroundChains,
+              )
+            else
+              field.copy(cells =
+                captured
+                  .filter(p => field(p) == Cell.Empty)
+                  .foldLeft(field.cells)((acc, p) => acc.updated(p.x, p.y, Cell.EmptyBase(player))),
+              )
+          }
         if value.isEmptyBase(enemy) then
           val (enemyEmptyBaseChain, enemyEmptyBase) = getEmptyBase(pos, enemy)
-          if captures.nonEmpty then
-            val newScoreRed = if player == Player.Red then scoreRed + capturedCount else scoreRed - freedCount
-            val newScoreBlack = if player == Player.Black then scoreBlack + capturedCount else scoreBlack - freedCount
-            val updatedCells1 = enemyEmptyBase.foldLeft(cells)((acc, p) => acc.updated(p.x, p.y, Cell.Empty))
-            val updatedCells2 = updatedCells1.updated(pos.x, pos.y, Cell.Point(player))
-            val updatedCells3 =
-              realCaptured.foldLeft(updatedCells2)((acc, p) => acc.updated(p.x, p.y, apply(p).capture(player)))
-            new Field(
-              updatedCells3,
-              newScoreRed,
-              newScoreBlack,
-              newMoves,
-              ColoredChain(captureChain, player).some,
-            ).some
+          if fieldWithCaptures.lastSurroundChains.nonEmpty then
+            fieldWithCaptures
+              .copy(
+                cells = enemyEmptyBase
+                  .foldLeft(fieldWithCaptures.cells)((acc, p) => acc.updated(p.x, p.y, Cell.Empty))
+                  .updated(pos.x, pos.y, Cell.Point(player)),
+                moves = newMoves,
+              )
+              .some
           else
-            val newScoreRed = if player == Player.Red then scoreRed else scoreRed + 1
-            val newScoreBlack = if player == Player.Black then scoreBlack else scoreBlack + 1
-            val updatedCells =
-              enemyEmptyBase.foldLeft(cells)((acc, p) => acc.updated(p.x, p.y, Cell.Base(enemy, p == pos)))
-            new Field(
-              updatedCells,
-              newScoreRed,
-              newScoreBlack,
-              newMoves,
-              ColoredChain(enemyEmptyBaseChain.toList, enemy).some,
+            copy(
+              cells = enemyEmptyBase.foldLeft(cells)((acc, p) => acc.updated(p.x, p.y, Cell.Base(enemy, p == pos))),
+              scoreRed = if player == Player.Red then scoreRed else scoreRed + 1,
+              scoreBlack = if player == Player.Black then scoreBlack else scoreBlack + 1,
+              moves = newMoves,
+              lastSurroundPlayer = enemy,
+              lastSurroundChains = List(enemyEmptyBaseChain),
             ).some
         else
-          val newEmptyBase = emptyCaptures.flatMap(_._2).filter(p => cells(p.x, p.y) == Cell.Empty)
-          val newScoreRed = if player == Player.Red then scoreRed + capturedCount else scoreRed - freedCount
-          val newScoreBlack = if player == Player.Black then scoreBlack + capturedCount else scoreBlack - freedCount
-          val updatedCells1 = cells.updated(pos.x, pos.y, Cell.Point(player))
-          val updatedCells2 =
-            newEmptyBase.foldLeft(updatedCells1)((acc, p) => acc.updated(p.x, p.y, Cell.EmptyBase(player)))
-          val updatedCells3 =
-            realCaptured.foldLeft(updatedCells2)((acc, p) => acc.updated(p.x, p.y, apply(p).capture(player)))
-          new Field(
-            updatedCells3,
-            newScoreRed,
-            newScoreBlack,
-            newMoves,
-            if captureChain.isEmpty then none else ColoredChain(captureChain, player).some,
-          ).some
+          fieldWithCaptures
+            .copy(
+              cells = fieldWithCaptures.cells.updated(pos.x, pos.y, Cell.Point(player)),
+              moves = newMoves,
+            )
+            .some
 
   inline def nextPlayer: Player =
     lastPlayer.map(_.opponent).getOrElse(Player.Red)
@@ -278,4 +265,4 @@ final class Field private (
 
 object Field:
   def apply(width: Int, height: Int): Field =
-    new Field(Vector2D.fill(width, height)(Cell.Empty), 0, 0, Nil, none)
+    new Field(Vector2D.fill(width, height)(Cell.Empty), 0, 0, Nil, Player.Red, List.empty)
