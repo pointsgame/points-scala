@@ -34,3 +34,21 @@ val bench = crossProject(JVMPlatform, JSPlatform, NativePlatform)
         .withMode(Mode.releaseFull)
     },
   )
+
+val verify = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  .dependsOn(field)
+  .settings(
+    Compile / mainClass := Some("points.verify.Verify"),
+    Compile / run / fork := true,
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect" % "3.6.3",
+      "co.fs2" %%% "fs2-core" % "3.12.0",
+      "co.fs2" %%% "fs2-io" % "3.12.0",
+    ),
+  )
+  .nativeSettings(
+    nativeConfig ~= {
+      _.withLTO(LTO.thin)
+        .withMode(Mode.releaseFull)
+    },
+  )
