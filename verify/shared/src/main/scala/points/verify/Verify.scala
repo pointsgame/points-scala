@@ -12,12 +12,13 @@ object Verify extends IOApp.Simple:
     val height = 20
     val initField = Field(width, height)
     fs2.io
-      .stdinUtf8[IO](32)
+      .stdinUtf8[IO](16)
       .repartition(s => Chunk.array(s.split("\n", -1)))
+      .map(_.trim)
       .evalMap:
         case "" => none[Pos].pure[IO]
         case s =>
-          s.trim.split(" ") match
+          s.split(" ") match
             case Array(x, y) =>
               val pos = for
                 x <- x.toIntOption
@@ -29,7 +30,7 @@ object Verify extends IOApp.Simple:
       .evalFold(initField):
         case (field, None) =>
           (0 until width * height).toVector.map(idx => Pos(idx % width, idx / width)).find(field.isPuttingAllowed) match
-            case Some(pos) => IO.raiseError(new RuntimeException(s"field is not fully occupied: ${pos}"))
+            case Some(pos) => IO.raiseError(new RuntimeException(s"field is not fully occupied: $pos"))
             case None => Console[IO].println("").as(initField)
         case (field, Some(pos)) =>
           field
