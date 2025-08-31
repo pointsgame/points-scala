@@ -210,8 +210,8 @@ final case class Field private (
               )
           }
         if value.isEmptyBase(enemy) then
-          val (enemyEmptyBaseChain, enemyEmptyBase) = getEmptyBase(pos, enemy)
           if fieldWithCaptures.lastSurroundChains.nonEmpty then
+            val enemyEmptyBase = fieldWithCaptures.wave(pos, pos => fieldWithCaptures(pos).isEmptyBase(enemy))
             fieldWithCaptures
               .copy(
                 cells = enemyEmptyBase
@@ -221,6 +221,7 @@ final case class Field private (
               )
               .some
           else
+            val (enemyEmptyBaseChain, enemyEmptyBase) = getEmptyBase(pos, enemy)
             copy(
               cells = enemyEmptyBase.foldLeft(cells)((acc, p) => acc.updated(p.x, p.y, Cell.Base(enemy, p == pos))),
               scoreRed = if player == Player.Red then scoreRed else scoreRed + 1,
