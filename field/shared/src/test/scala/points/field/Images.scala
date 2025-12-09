@@ -3,15 +3,13 @@ package points.field
 import cats.data.NonEmptyList
 import cats.implicits.*
 
-import scala.jdk.CollectionConverters.*
-
 object Images:
   /** Every letter means a dot that should be placed on the field. Lower-cases are always Red, upper-cases are always
     * Black. Order by which appropriate points are placed: all 'a' points (Red), all 'A' points (Black), all 'b' points
     * (Red), all 'B' points (Black), etc...
     */
   def constructMoveList(image: String): (Int, Int, List[(Pos, Player)]) =
-    val lines = image.stripMargin.lines.nn.toList.nn.asScala.toList.map(_.trim.nn).filter(_.nonEmpty)
+    val lines = image.stripMargin.split("\n").toList.map(_.trim).filter(_.nonEmpty)
     require(lines.groupBy(_.length).size == 1, "lines must have equal length")
     val width = lines.head.length
     val height = lines.size
