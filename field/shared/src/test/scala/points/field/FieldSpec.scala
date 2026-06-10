@@ -11,7 +11,7 @@ class FieldSpec extends munit.FunSuite:
       .a.
       """,
     ).get.toList.foreach:
-      case (field, rotate) =>
+      case (field, _) =>
         assertEquals(field.scoreRed, 1)
         assertEquals(field.scoreBlack, 0)
         assertEquals(field.lastSurroundChains.size, 1)
@@ -41,7 +41,7 @@ class FieldSpec extends munit.FunSuite:
       .aB.
       """,
     ).get.toList.foreach:
-      case (field, rotate) =>
+      case (field, _) =>
         assertEquals(field.scoreRed, 0)
         assertEquals(field.scoreBlack, 1)
         assertEquals(field.lastSurroundChains.size, 1)
@@ -55,7 +55,7 @@ class FieldSpec extends munit.FunSuite:
       .aB.
       """,
     ).get.toList.foreach:
-      case (field, rotate) =>
+      case (field, _) =>
         assertEquals(field.scoreRed, 0)
         assertEquals(field.scoreBlack, 2)
         assertEquals(field.lastSurroundChains.size, 2)
@@ -70,7 +70,7 @@ class FieldSpec extends munit.FunSuite:
       ...c...
       """,
     ).get.toList.foreach:
-      case (field, rotate) =>
+      case (field, _) =>
         assertEquals(field.scoreRed, 4)
         assertEquals(field.scoreBlack, 0)
         assertEquals(field.lastSurroundChains.size, 1)
@@ -87,7 +87,7 @@ class FieldSpec extends munit.FunSuite:
       ...D...
       """,
     ).get.toList.foreach:
-      case (field, rotate) =>
+      case (field, _) =>
         assertEquals(field.scoreRed, 0)
         assertEquals(field.scoreBlack, 9)
         assertEquals(field.lastSurroundChains.size, 1)
@@ -100,7 +100,7 @@ class FieldSpec extends munit.FunSuite:
       .a.
       """,
     ).get.toList.foreach:
-      case (field, rotate) =>
+      case (field, _) =>
         assertEquals(field.scoreRed, 1)
         assertEquals(field.scoreBlack, 0)
         assertEquals(field.lastSurroundChains.size, 1)
@@ -113,7 +113,7 @@ class FieldSpec extends munit.FunSuite:
       .b.b..
       """,
     ).get.toList.foreach:
-      case (field, rotate) =>
+      case (field, _) =>
         assertEquals(field.scoreRed, 2)
         assertEquals(field.scoreBlack, 0)
         assertEquals(field.lastSurroundChains.map(_.size), List(4, 4))
@@ -167,7 +167,7 @@ class FieldSpec extends munit.FunSuite:
       .a.
       """,
     ).get.toList.foreach:
-      case (field, rotate) =>
+      case (field, _) =>
         assertEquals(field.scoreRed, 1)
         assertEquals(field.scoreBlack, 0)
         assertEquals(field.lastSurroundChains.size, 1)
@@ -269,7 +269,7 @@ class FieldSpec extends munit.FunSuite:
       ..a.
       """,
     ).get.toList.foreach:
-      case (field, rotate) =>
+      case (field, _) =>
         assertEquals(field.scoreRed, 2)
         assertEquals(field.scoreBlack, 0)
 
@@ -283,7 +283,7 @@ class FieldSpec extends munit.FunSuite:
       .a.a.
       """,
     ).get.toList.foreach:
-      case (field, rotate) =>
+      case (field, _) =>
         assertEquals(field.scoreRed, 2)
         assertEquals(field.scoreBlack, 0)
 
@@ -299,7 +299,7 @@ class FieldSpec extends munit.FunSuite:
       ..a..
       """,
     ).get.toList.foreach:
-      case (field, rotate) =>
+      case (field, _) =>
         assertEquals(field.scoreRed, 3)
         assertEquals(field.scoreBlack, 0)
 
@@ -315,7 +315,7 @@ class FieldSpec extends munit.FunSuite:
       ..a..
       """,
     ).get.toList.foreach:
-      case (field, rotate) =>
+      case (field, _) =>
         assertEquals(field.scoreRed, 2)
         assertEquals(field.scoreBlack, 0)
 
